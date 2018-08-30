@@ -3,4 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools" tools:context=".DeviceList">
     <item android:id="@+id/action_settings" android:title="Settings"
         android:orderInCategory="100" app:showAsAction="never" />
+    <item
+        android:id="@+id/action_debug"
+        android:checkable="true"
+        android:orderInCategory="102"
+        android:title="LayoutDebug"
+        app:showAsAction="never" />
 </menu>

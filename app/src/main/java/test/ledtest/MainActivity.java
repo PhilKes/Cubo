@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
-import android.databinding.DataBindingUtil;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -31,25 +30,29 @@ import java.util.UUID;
 
 
 public class MainActivity extends AppCompatActivity {
+    public static boolean DEBUG=true;
 
-    private static final int MAX_BRIGHTNESS = 4095,MAX_SPEED=100,MAX_FRAMETIME=2000;
-    public static boolean DEBUG=false;
-    Button btnDis,btnSend;
-    SeekBar brightBar;
-    SeekBar speedBar;
-    TextView brightText,speedText;
-    GridLayout grid;
-    EditText textAnim;
-    String address = null;
-    ArrayList<ImageButton> animButtons;
-    int selectedAnim=-1;
+    private static final UUID myUUID = UUID.randomUUID();
+    private static final int MAX_BRIGHTNESS = 4095,MAX_SPEED=100,MAX_FRAMETIME=2000,
+                            BUTTON_SIZE=220;
+    private static final int UNSELECTED_COLOR=Color.rgb(200,200,200),
+                             SELECTED_COLOR=Color.RED;
+
+    private Button btnDis,btnSend;
+    private SeekBar brightBar,speedBar;
+    private TextView brightText,speedText;
+    private GridLayout grid;
+    private EditText textAnim;
+    private String address = null;
+    private ArrayList<ImageButton> animButtons;
+    private int selectedAnim=-1;
     private ProgressDialog progress;
-    BluetoothAdapter myBluetooth = null;
-    BluetoothSocket btSocket = null;
+    private BluetoothAdapter btAdapter = null;
+    private BluetoothSocket btSocket = null;
     private boolean isBtConnected = false;
     private String[] anims=new String[]{"off","all","red","blue","green","random","stripes","cube","font4"};
-    //SPP UUID. Look for it
-    static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -61,20 +64,21 @@ public class MainActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_main);
         //call the widgtes
-        btnDis = (Button)findViewById(R.id.button4);
-        btnSend=(Button)findViewById(R.id.sendBtn);
-        textAnim=(EditText) findViewById(R.id.animText);
+        btnDis = findViewById(R.id.button4);
+        btnSend= findViewById(R.id.sendBtn);
+        textAnim= findViewById(R.id.animText);
         brightBar=findViewById(R.id.brightBar);
         speedBar=findViewById(R.id.speedBar);
         brightText = findViewById(R.id.brightText);
-        speedText=(TextView)findViewById(R.id.speedText);
+        speedText= findViewById(R.id.speedText);
 
         if(!DEBUG)
             new ConnectBT().execute(); //Call the class to connect
 
         //region ANIMATION GRID
-        grid=(GridLayout)findViewById(R.id.grid);
-        grid.setColumnCount(3);
+        grid= findViewById(R.id.grid);
+        //grid.setColumnCount(3);
+        grid.setColumnCount(getWindowManager().getDefaultDisplay().getWidth()/BUTTON_SIZE);
         animButtons=new ArrayList<>();
         //View animButton=getLayoutInflater().inflate(R.layout.animbutton,null);
         for (int i = 0; i < anims.length; i++) {
@@ -87,18 +91,17 @@ public class MainActivity extends AppCompatActivity {
             grid.addView(btn);
             animButtons.add(btn);
             GridLayout.LayoutParams params = (GridLayout.LayoutParams) btn.getLayoutParams();
-            params.height=220;
-            params.width=220;
+            params.height=BUTTON_SIZE;
+            params.width=BUTTON_SIZE;
             btn.setLayoutParams(params);
             btn.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-            btn.setBackgroundColor(Color.rgb(200,200,200));
+            btn.setBackgroundColor(UNSELECTED_COLOR);
             btn.setOnClickListener(view->{
 
                 animClicked(j);
             });
         }
         //endregion
-
         btnSend.setOnClickListener(view->
         {
             if(!DEBUG) {
@@ -110,7 +113,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         btnDis.setOnClickListener(v -> {
-            if(!DEBUG)
             Disconnect(); //close connection
         });
 
@@ -179,14 +181,14 @@ public class MainActivity extends AppCompatActivity {
         if(DEBUG)
             System.out.println("Clicked Animation:\t"+anim);
         if(selectedAnim!=-1)
-            animButtons.get(selectedAnim).setBackgroundColor(Color.rgb(200,200,200));
+            animButtons.get(selectedAnim).setBackgroundColor(UNSELECTED_COLOR);
         selectedAnim=anim;
-        animButtons.get(selectedAnim).setBackgroundColor(Color.RED);
+        animButtons.get(selectedAnim).setBackgroundColor(SELECTED_COLOR);
         if(!DEBUG) {
             try {
                 btSocket.getOutputStream().write(String.valueOf("A"+anim).getBytes());
             } catch (IOException e) {
-                Log.d("Handy", "onCreate: Erorr Anim Clicked");
+                Log.d("Android", "onCreate: Error Anim Clicked");
             }
         }
     }
@@ -261,8 +263,8 @@ public class MainActivity extends AppCompatActivity {
             {
                 if (btSocket == null || !isBtConnected)
                 {
-                    myBluetooth = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
-                    BluetoothDevice dispositivo = myBluetooth.getRemoteDevice(address);//connects to the device's address and checks if it's available
+                    btAdapter = BluetoothAdapter.getDefaultAdapter();//get the mobile bluetooth device
+                    BluetoothDevice dispositivo = btAdapter.getRemoteDevice(address);//connects to the device's address and checks if it's available
                     btSocket = dispositivo.createInsecureRfcommSocketToServiceRecord(myUUID);//create a RFCOMM (SPP) connection
                     BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
                     btSocket.connect();//start connection
