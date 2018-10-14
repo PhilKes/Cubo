@@ -1,0 +1,30 @@
+buildscript {
+  repositories {
+    mavenCentral()
+    jcenter()
+    google()
+  }
+
+  dependencies {
+    classpath "com.jakewharton:butterknife-gradle-plugin:${versions.release}"
+  }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'com.jakewharton.butterknife'
+
+android {
+  compileSdkVersion versions.compileSdk
+
+  defaultConfig {
+    minSdkVersion versions.minSdk
+  }
+}
+
+dependencies {
+  implementation deps.release.runtime
+  annotationProcessor deps.release.compiler
+
+  testImplementation deps.junit
+  testImplementation deps.truth
+}

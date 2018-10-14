@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Cubo</string>
+    <string name="text_hint">Text to scroll</string>
+</resources>
