@@ -1,2 +1,0 @@
-# LedTest
-Bluetooth Test App
