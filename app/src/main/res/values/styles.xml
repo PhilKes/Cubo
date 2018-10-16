@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
@@ -6,6 +6,30 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+        <item name="android:textColor">#353535</item>
+
     </style>
 
+    <style name="MySeekBar" parent="Widget.AppCompat.SeekBar">
+        <item name="android:progressBackgroundTint">@color/colorPrimaryLight</item>
+        <item name="android:progressTint">@color/colorPrimary</item>
+        <item name="android:thumbTint">@color/colorPrimary</item>
+    </style>
+    <style name="ButtonBlue">
+        <item name="android:background">@drawable/button_blue</item>
+        <item name="android:textSize">20dp</item>
+        <item name="android:fontFamily">"sans-serif"</item>
+        <item name="android:fontWeight" tools:targetApi="o">400</item>
+        <item name="android:textColor">@color/button_text_color</item>
+        <item name="android:strokeColor">#090e1b</item>
+        <item name="android:strokeWidth">1</item>
+        <item name="android:elevation">10dp</item>
+        <item name="android:shadowColor">#000000</item>
+        <item name="android:shadowDx">1</item>
+        <item name="android:shadowDy">2</item>
+        <item name="android:shadowRadius">1</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
 </resources>

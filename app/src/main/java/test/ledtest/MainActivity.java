@@ -5,18 +5,24 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.ContextThemeWrapper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
@@ -24,7 +30,6 @@ import android.widget.GridLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Scroller;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -34,21 +39,30 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+/**
+ * Main Control Activity
+ */
+public class MainActivity extends AppCompatActivity
+{
+    /**
+     * DEBUG Flag (Disable BT)
+     */
     public static boolean DEBUG=true;
 
    // private static final UUID myUUID = UUID.randomUUID();
    private static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");;
-    private static final int MAX_BRIGHTNESS = 4000,MAX_SPEED=30,MAX_FRAMETIME=2000,
+    private static final int MAX_BRIGHTNESS = 4000,MAX_SPEED=100,MAX_FRAMETIME=2000,
                             BUTTON_SIZE=220;
     private static final int UNSELECTED_COLOR=Color.rgb(200,200,200),
                              SELECTED_COLOR=Color.RED;
+    /**
+     * Android
+     */
     public static final String TAG="Android";
-    private Button btnDis,btnSend;
     private SeekBar brightBar,speedBar;
     private TextView brightText,speedText;
     private GridLayout grid;
-    private EditText textAnim;
+    private EditText textCommand;
     private String address = null;
     //CHANGE BACK FOR IMAGE BUTTONS
     private ArrayList<ImageButton> animButtons;
@@ -58,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     private BluetoothAdapter btAdapter = null;
     private BluetoothSocket btSocket = null;
     private boolean isBtConnected = false;
-    private String[] anims=new String[]{"rand","red","green","blue","anim","randfull","text","music","rgb","all","off"};
+    //private String[] anims=new String[]{"rand","red","green","blue","anim","randfull","text","music","rgb","all","off"};
     private int[] animRes=new int[]{R.drawable.rand,R.drawable.red,R.drawable.green,R.drawable.blue,R.drawable.anim,
             R.drawable.randfull,R.drawable.text,R.drawable.music,R.drawable.rgb,R.drawable.all,R.drawable.off};
     //{"off","all","red","blue","green","random","stripes","cube","font4"};
@@ -75,22 +89,15 @@ public class MainActivity extends AppCompatActivity {
         }
         setContentView(R.layout.activity_main);
         //call the widgtes
-        btnDis = findViewById(R.id.btn_disconnect);
-        btnSend= findViewById(R.id.btn_sendcommand);
-        textAnim= findViewById(R.id.text_command);
+        textCommand= findViewById(R.id.text_command);
         brightBar=findViewById(R.id.brightBar);
         speedBar=findViewById(R.id.speedBar);
         brightText = findViewById(R.id.brightText);
         speedText= findViewById(R.id.speedText);
-        Button btn_sendcommand= findViewById(R.id.btn_sendcommand);
-        btn_sendcommand.setOnClickListener(v->{
-                Log.d(TAG, "sendCommand: "+textAnim.getText().toString());
-            if(!DEBUG)
-                sendBT(textAnim.getText().toString());
 
-        });
         if(!DEBUG)
             new ConnectBT().execute(); //Call the class to connect
+        Toast.makeText(getApplicationContext(),"Connected",Toast.LENGTH_LONG).show();
 
         //region ANIMATION GRID
         grid= findViewById(R.id.grid);
@@ -105,13 +112,12 @@ public class MainActivity extends AppCompatActivity {
             ImageButton btn=new ImageButton(this);
             //RadioButton btn=new RadioButton(this);
             btn.setId(View.generateViewId());
-            //btn.setImageDrawable(getResources().getDrawable(getResources().getIdentifier(anims[i],"drawable",MainActivity.this.getPackageName())));
-            btn.setImageResource(animRes[i]);
-             /*
-            Button btn=new Button(this);
-            btn.setId(View.generateViewId());
-            btn.setText(anims[i]);
-            */
+
+            LayerDrawable layerDrawable=new LayerDrawable(
+                    new Drawable[]{getResources().getDrawable(R.drawable.btn_anim_default)});
+            layerDrawable.addLayer(getResources().getDrawable(animRes[i]));
+            btn.setImageDrawable(layerDrawable);
+
             grid.addView(btn);
             animButtons.add(btn);
             GridLayout.LayoutParams params = (GridLayout.LayoutParams) btn.getLayoutParams();
@@ -120,21 +126,13 @@ public class MainActivity extends AppCompatActivity {
             btn.setLayoutParams(params);
             //CHANGE BACK FOR IMAGE BUTTONS
             btn.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-            btn.setBackgroundColor(UNSELECTED_COLOR);
+            btn.setBackgroundColor(Color.TRANSPARENT);
             btn.setOnClickListener(view->{
 
                 animClicked(j);
             });
         }
         //endregion
-        btnSend.setOnClickListener(view->
-        {
-            if(!DEBUG)
-                    sendBT(String.valueOf(textAnim.getText()));
-        });
-        btnDis.setOnClickListener(v -> {
-            Disconnect(); //close connection
-        });
 
         //region BRIGHTNESS & SPEED
         brightBar.setMax(MAX_BRIGHTNESS);
@@ -175,62 +173,24 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+                /*
                 Log.d(TAG, "NEW SPEED: "+(MAX_FRAMETIME/(seekBar.getProgress()<1?1:seekBar.getProgress())));
                 if(!DEBUG)
                         sendBT(String.valueOf("S"+(MAX_FRAMETIME/(seekBar.getProgress()<1?1:seekBar.getProgress()))));
-
+                */
+                Log.d(TAG, "NEW SPEED: "+seekBar.getProgress());
+                if(!DEBUG)
+                    sendBT(String.valueOf("F"+seekBar.getProgress()));
             }
         });
         //endregion
     }
-
-    private void animClicked(int anim)
-    {
-        Log.d(TAG, "animClicked: "+anim);
-        if(selectedAnim!=-1)
-            animButtons.get(selectedAnim).setBackgroundColor(UNSELECTED_COLOR);
-        selectedAnim=anim;
-        animButtons.get(selectedAnim).setBackgroundColor(SELECTED_COLOR);
-        if(!DEBUG)
-                sendBT(String.valueOf("A"+anim));
-    }
-    private void sendBT(String msg)
-    {
-        try {
-            btSocket.getOutputStream().write((msg+"\\").getBytes());
-            Log.d(TAG, "sendBT: "+msg);
-        } catch (IOException e) {
-            Log.d(TAG, ": Error sendBT");
-        }
-    }
-    private void Disconnect()
-    {
-        if (btSocket!=null) //If the btSocket is busy
-        {
-            try
-            {
-                btSocket.close(); //close connection
-            }
-            catch (IOException e)
-            { msg("Error");}
-        }
-        finish(); //return to the first layout
-
-    }
-
-    // fast way to call Toast
-    private void msg(String s)
-    {
-        Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_led_control, menu);
         return true;
     }
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -245,20 +205,61 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-    public void resetBright(View view) {
-        brightBar.setProgress(brightBar.getMax());
-        brightText.setText(""+brightBar.getProgress());
+    @Override
+    public void onBackPressed()
+    {
+        System.out.println("BACK");
+        Disconnect(null);
+        //super.onBackPressed();
     }
 
-    public void resetSpeed(View view) {
-        speedBar.setProgress(speedBar.getMax()/2);
-        speedText.setText(""+speedBar.getProgress());
+    /**
+     * Writes String to the btSocket Stream, adds '\' end char to command
+     * @param msg String message to send
+     *
+     */
+    private void sendBT(String msg)
+    {
+        try {
+            btSocket.getOutputStream().write((msg+"\\").getBytes());
+            Log.d(TAG, "sendBT: "+msg);
+        } catch (IOException e) {
+            Log.d(TAG, ": Error sendBT");
+        }
     }
 
+    /**
+     * OnClickListener for all Animation Buttons<br>
+     * Sends Animation command
+     * @param anim Clicked Animation number
+     *
+     */
+    private void animClicked(int anim)
+    {
+        Log.d(TAG, "animClicked: "+anim);
+
+        if(selectedAnim!=-1)
+        {
+            LayerDrawable layerDrawable=new LayerDrawable(new Drawable[]{getResources().getDrawable(R.drawable.btn_anim_default)
+                    ,getResources().getDrawable(animRes[selectedAnim])});
+            animButtons.get(selectedAnim).setImageDrawable(layerDrawable);
+        }
+        selectedAnim=anim;
+        LayerDrawable layerDrawable=new LayerDrawable(new Drawable[]{getResources().getDrawable(R.drawable.btn_anim_clicked)
+                ,getResources().getDrawable(animRes[selectedAnim])});
+        animButtons.get(selectedAnim).setImageDrawable(layerDrawable);
+        if(!DEBUG)
+                sendBT(String.valueOf("A"+anim));
+    }
+
+    /**
+     * OnClickListener for Text Button<br>
+     * Opens dialog for Text input and sends it
+     * @param view
+     */
     public void sendText(View view)
     {
-       // AlertDialog.Builder textDialog=new AlertDialog.Builder(this);
+        // AlertDialog.Builder textDialog=new AlertDialog.Builder(this);
         AlertDialog alert= new AlertDialog.Builder(this).create();
         alert.setTitle("Enter Text to scroll");
         LinearLayout linearLayout=new LinearLayout(this);
@@ -274,8 +275,13 @@ public class MainActivity extends AppCompatActivity {
         input.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         input.setInputType(InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS);
         linearLayout.addView(input);
-        Button btnOK=new Button(this);
-        btnOK.setText("Send");
+        Button btnOK=new Button(new ContextThemeWrapper(this, R.style.ButtonBlue),null,R.style.ButtonBlue);
+        //btnOK.setBackgroundDrawable(getResources().getDrawable(R.drawable.button_blue));
+        //btnOK.setBackgroundDrawable(getResources().getDrawable(R.drawable.button_send_xml));
+        btnOK.setText("⏎");
+        btnOK.setTextSize(pxToDP(10));
+        btnOK.setPadding(pxToDP(8),0,0,pxToDP(10));
+        btnOK.setLayoutParams(new LinearLayout.LayoutParams(pxToDP(38),pxToDP(40)));
         btnOK.setOnClickListener(v->
         {
             if(!DEBUG)
@@ -288,6 +294,93 @@ public class MainActivity extends AppCompatActivity {
         alert.show();
     }
 
+    /**
+     * OnClickListener for Command Send button<br>
+     * Sends String from EditText as Command
+     * @param view
+     */
+    public void sendCommand(View view)
+    {
+        hideKeyboard();
+        if(!DEBUG)
+            sendBT(String.valueOf(textCommand.getText()));
+        textCommand.setText("");
+    }
+
+    /**
+     * OnClickListener for Brightness SeekBar<br>
+     * Resets the brightness to default and sends it
+     * @param view
+     */
+    public void resetBright(View view) {
+        brightBar.setProgress(brightBar.getMax());
+        brightText.setText(""+brightBar.getProgress());
+        Log.d(TAG, "BRIGHTNESS: "+brightBar.getProgress());
+        if(!DEBUG)
+            sendBT(String.valueOf("B"+brightBar.getProgress()));
+    }
+    /**
+     * OnClickListener for Speed SeekBar<br>
+     * Resets the speed to default and sends it
+     * @param view
+     *
+     */
+    public void resetSpeed(View view) {
+        speedBar.setProgress(speedBar.getMax()/2);
+        speedText.setText(""+speedBar.getProgress());
+        Log.d(TAG, "NEW SPEED: "+speedBar.getProgress());
+        if(!DEBUG)
+            sendBT(String.valueOf("F"+speedBar.getProgress()));
+    }
+
+    /**
+     * OnClickListener for Disconnect Button<br>
+     * Disconnects BT and returns to DeviceList
+     * @param view
+     */
+    public void Disconnect(View view)
+    {
+        if (btSocket!=null) //If the btSocket is busy
+        {
+            try
+            {
+                btSocket.close(); //close connection
+            }
+            catch (IOException e)
+            { msg("Error");}
+        }
+        finish(); //return to the first layout
+
+    }
+    private void hideKeyboard()
+    {
+        View view= this.getCurrentFocus();
+        if(view!=null)
+        {
+            InputMethodManager imm=(InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(),0);
+        }
+    }
+
+    /**
+     * Utility function
+     * Returns Pixel to DP
+     * @param px Pixel value
+     * @return DP Value
+     */
+    public int pxToDP(int px)
+    {
+        return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, px, getResources().getDisplayMetrics());
+    }
+    // fast way to call Toast
+    public void msg(String s)
+    {
+        Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * AsyncTask for connecting to BT device
+     */
     private class ConnectBT extends AsyncTask<Void, Void, Void>  // UI thread
     {
         private boolean ConnectSuccess = true; //if it's here, it's almost connected

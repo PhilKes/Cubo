@@ -20,7 +20,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainActivity"
-            android:label="Main Activity">
+            android:label="Cube Control">
         </activity>
     </application>
 

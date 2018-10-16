@@ -20,6 +20,9 @@ import java.util.Set;
 
 import static test.ledtest.MainActivity.DEBUG;
 
+/**
+ * Starting Activity for connection to LED Cube BT Module
+ */
 public class DeviceList extends AppCompatActivity
 {
     //widgets
@@ -61,6 +64,10 @@ public class DeviceList extends AppCompatActivity
         btnPaired.setOnClickListener(v -> pairedDevicesList());
     }
 
+    /**
+     * OnClickListener for Search Button
+     * Shows all paired Devices in ListView
+     */
     private void pairedDevicesList()
     {
         if(DEBUG) {
@@ -77,12 +84,18 @@ public class DeviceList extends AppCompatActivity
         else
             Toast.makeText(getApplicationContext(), "No Paired Bluetooth Devices Found.", Toast.LENGTH_LONG).show();
 
-        final ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1, list);
+        final ArrayAdapter adapter = new ArrayAdapter(this,R.layout.device_list_item, list);
+        //devicelist.setBackgroundColor(getResources().getColor(R.color.colorSecondary));
         devicelist.setAdapter(adapter);
         devicelist.setOnItemClickListener((av,v,arg2,arg3)->goToMainActivity(v)); //Method called when the device from the list is clicked
 
     }
 
+    /**
+     * OnClickListener for DeviceList items
+     * Starts MainActivity with selected Device
+     * @param v
+     */
     private void goToMainActivity(View v)
     {
         String address="";
