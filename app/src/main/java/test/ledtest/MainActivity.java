@@ -35,7 +35,10 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -47,11 +50,12 @@ public class MainActivity extends AppCompatActivity
     /**
      * DEBUG Flag (Disable BT)
      */
-    public static boolean DEBUG=true;
+    public static boolean DEBUG=false;
 
    // private static final UUID myUUID = UUID.randomUUID();
-   private static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");;
-    private static final int MAX_BRIGHTNESS = 4000,MAX_SPEED=100,MAX_FRAMETIME=2000,
+   private static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+    static final int ARDUINO_DEFAUL_SPEED=50;
+    private static final int MAX_BRIGHTNESS = 255,MAX_SPEED=200,MAX_FRAMETIME=2000,
                             BUTTON_SIZE=220;
     private static final int UNSELECTED_COLOR=Color.rgb(200,200,200),
                              SELECTED_COLOR=Color.RED;
@@ -70,18 +74,27 @@ public class MainActivity extends AppCompatActivity
     private int selectedAnim=-1;
     private ProgressDialog progress;
     private BluetoothAdapter btAdapter = null;
-    private BluetoothSocket btSocket = null;
+    public static BluetoothSocket btSocket = null;
     private boolean isBtConnected = false;
     //private String[] anims=new String[]{"rand","red","green","blue","anim","randfull","text","music","rgb","all","off"};
-    private int[] animRes=new int[]{R.drawable.rand,R.drawable.red,R.drawable.green,R.drawable.blue,R.drawable.anim,
-            R.drawable.randfull,R.drawable.text,R.drawable.music,R.drawable.rgb,R.drawable.all,R.drawable.off};
+    private int[] animRes=new int[]{
+            R.drawable.rand,
+            R.drawable.red,
+            R.drawable.green,
+            R.drawable.blue,
+            R.drawable.anim,
+            R.drawable.randfull,
+            R.drawable.all,
+            R.drawable.music,
+            R.drawable.waterfall,
+            R.drawable.waterfall,
+            R.drawable.off};
     //{"off","all","red","blue","green","random","stripes","cube","font4"};
 
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
-    {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if(!DEBUG) {
             Intent newint = getIntent();
@@ -128,12 +141,16 @@ public class MainActivity extends AppCompatActivity
             btn.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
             btn.setBackgroundColor(Color.TRANSPARENT);
             btn.setOnClickListener(view->{
-
                 animClicked(j);
             });
         }
         //endregion
 
+        Button btnSnake=findViewById(R.id.btn_snake);
+        btnSnake.setOnClickListener(v->{
+            Intent intent=new Intent(this,SnakeActivity.class);
+            startActivity(intent);
+        });
         //region BRIGHTNESS & SPEED
         brightBar.setMax(MAX_BRIGHTNESS);
         brightBar.setProgress(brightBar.getMax());
@@ -157,13 +174,14 @@ public class MainActivity extends AppCompatActivity
             }
         });
         speedBar.setMax(MAX_SPEED);
-        speedBar.setProgress(speedBar.getMax()/2);
+        speedBar.setProgress(ARDUINO_DEFAUL_SPEED);
         speedText.setText(speedBar.getProgress()+"");
-
         //                                                                                          SEND INITIAL SPEED AND BRIGHTNESS?
         speedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(progress<1)
+                    seekBar.setProgress(1);
                 speedText.setText(String.valueOf(seekBar.getProgress()));
             }
 
@@ -173,11 +191,7 @@ public class MainActivity extends AppCompatActivity
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                /*
-                Log.d(TAG, "NEW SPEED: "+(MAX_FRAMETIME/(seekBar.getProgress()<1?1:seekBar.getProgress())));
-                if(!DEBUG)
-                        sendBT(String.valueOf("S"+(MAX_FRAMETIME/(seekBar.getProgress()<1?1:seekBar.getProgress()))));
-                */
+
                 Log.d(TAG, "NEW SPEED: "+seekBar.getProgress());
                 if(!DEBUG)
                     sendBT(String.valueOf("F"+seekBar.getProgress()));
@@ -218,7 +232,7 @@ public class MainActivity extends AppCompatActivity
      * @param msg String message to send
      *
      */
-    private void sendBT(String msg)
+    public static void sendBT(String msg)
     {
         try {
             btSocket.getOutputStream().write((msg+"\\").getBytes());
@@ -237,7 +251,7 @@ public class MainActivity extends AppCompatActivity
     private void animClicked(int anim)
     {
         Log.d(TAG, "animClicked: "+anim);
-
+        resetSpeed(null);
         if(selectedAnim!=-1)
         {
             LayerDrawable layerDrawable=new LayerDrawable(new Drawable[]{getResources().getDrawable(R.drawable.btn_anim_default)
@@ -265,6 +279,7 @@ public class MainActivity extends AppCompatActivity
         LinearLayout linearLayout=new LinearLayout(this);
         linearLayout.setOrientation(LinearLayout.HORIZONTAL);
         EditText input=new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         input.setScroller(new Scroller(this));
         input.setVerticalScrollBarEnabled(true);
         input.setMaxLines(1);
@@ -285,7 +300,7 @@ public class MainActivity extends AppCompatActivity
         btnOK.setOnClickListener(v->
         {
             if(!DEBUG)
-                sendBT("T"+input.getText().toString());
+                sendBT("T"+input.getText().toString().toUpperCase());
             Log.d(TAG, "sendText: "+input.getText().toString());
             alert.cancel();
         });
@@ -326,7 +341,7 @@ public class MainActivity extends AppCompatActivity
      *
      */
     public void resetSpeed(View view) {
-        speedBar.setProgress(speedBar.getMax()/2);
+        speedBar.setProgress(ARDUINO_DEFAUL_SPEED);
         speedText.setText(""+speedBar.getProgress());
         Log.d(TAG, "NEW SPEED: "+speedBar.getProgress());
         if(!DEBUG)
@@ -378,6 +393,28 @@ public class MainActivity extends AppCompatActivity
         Toast.makeText(getApplicationContext(),s,Toast.LENGTH_LONG).show();
     }
 
+    public void testBTSend(View view) {
+        try {
+            InputStream inputStream = getResources().openRawResource(R.raw.cube_grow);
+            //InputStreamReader inputreader = new InputStreamReader(inputStream);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line = reader.readLine();
+            while (line != null) {
+                System.out.println(line);
+                String[] vals=line.split(",");
+                for (String s : vals) {
+                    System.out.print(s);
+                    sendBT(s);
+                }
+                System.out.println();
+                sendBT("\n");
+                line = reader.readLine();
+            }
+            reader.close();
+            inputStream.close();
+        }catch (Exception e){e.printStackTrace();}
+    }
+
     /**
      * AsyncTask for connecting to BT device
      */
@@ -407,6 +444,7 @@ public class MainActivity extends AppCompatActivity
             }
             catch (IOException e)
             {
+                e.printStackTrace();
                 ConnectSuccess = false;//if the try failed, you can check the exception here
             }
             return null;
