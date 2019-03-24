@@ -5,11 +5,14 @@ import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.media.SoundPool;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -51,7 +54,7 @@ public class MainActivity extends AppCompatActivity
      * DEBUG Flag (Disable BT)
      */
     public static boolean DEBUG=false;
-
+//TODO LOOSE BT CONNECTION
    // private static final UUID myUUID = UUID.randomUUID();
    private static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     static final int ARDUINO_DEFAUL_SPEED=50;
@@ -59,6 +62,7 @@ public class MainActivity extends AppCompatActivity
                             BUTTON_SIZE=220;
     private static final int UNSELECTED_COLOR=Color.rgb(200,200,200),
                              SELECTED_COLOR=Color.RED;
+
     /**
      * Android
      */
@@ -78,20 +82,22 @@ public class MainActivity extends AppCompatActivity
     private boolean isBtConnected = false;
     //private String[] anims=new String[]{"rand","red","green","blue","anim","randfull","text","music","rgb","all","off"};
     private int[] animRes=new int[]{
-            R.drawable.rand,
+            R.drawable.cube,
             R.drawable.red,
             R.drawable.green,
             R.drawable.blue,
-            R.drawable.anim,
+            R.drawable.rain,
             R.drawable.randfull,
             R.drawable.all,
             R.drawable.music,
             R.drawable.waterfall,
-            R.drawable.waterfall,
-            R.drawable.off};
+            R.drawable.waves,
+            R.drawable.cubemove,
+    };
+    private SoundPool soundPool;
+    private ArrayList<Integer> soundIDs;
+    private BluetoothLostReceiver bluetoothLostReceiver;
     //{"off","all","red","blue","green","random","stripes","cube","font4"};
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +136,6 @@ public class MainActivity extends AppCompatActivity
                     new Drawable[]{getResources().getDrawable(R.drawable.btn_anim_default)});
             layerDrawable.addLayer(getResources().getDrawable(animRes[i]));
             btn.setImageDrawable(layerDrawable);
-
             grid.addView(btn);
             animButtons.add(btn);
             GridLayout.LayoutParams params = (GridLayout.LayoutParams) btn.getLayoutParams();
@@ -146,7 +151,8 @@ public class MainActivity extends AppCompatActivity
         }
         //endregion
 
-        Button btnSnake=findViewById(R.id.btn_snake);
+        ImageButton btnSnake=findViewById(R.id.btn_snake);
+
         btnSnake.setOnClickListener(v->{
             Intent intent=new Intent(this,SnakeActivity.class);
             startActivity(intent);
@@ -198,7 +204,22 @@ public class MainActivity extends AppCompatActivity
             }
         });
         //endregion
+        if (bluetoothLostReceiver == null)
+        {
+            bluetoothLostReceiver = new BluetoothLostReceiver();
+            bluetoothLostReceiver.setMainActivity(this);
+            IntentFilter filter = new IntentFilter("android.bluetooth.device.action.ACL_DISCONNECTED");
+            registerReceiver(bluetoothLostReceiver, filter);
+        }
+
     }
+
+    @Override
+    protected void onDestroy() {
+       // unregisterReceiver(bluetoothLostReceiver);
+        super.onDestroy();
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -248,7 +269,7 @@ public class MainActivity extends AppCompatActivity
      * @param anim Clicked Animation number
      *
      */
-    private void animClicked(int anim)
+    public void animClicked(int anim)
     {
         Log.d(TAG, "animClicked: "+anim);
         resetSpeed(null);
@@ -465,6 +486,27 @@ public class MainActivity extends AppCompatActivity
                 isBtConnected = true;
             }
             progress.dismiss();
+        }
+    }
+    public class BluetoothLostReceiver extends BroadcastReceiver {
+
+        MainActivity main = null;
+
+        public void setMainActivity(MainActivity main)
+        {
+            this.main = main;
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if(BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(intent.getAction()))
+            {
+                Log.d(TAG, "onReceive: Lost BT Connection!");
+                if(SnakeActivity.thread!=null)
+                    SnakeActivity.stopWorker=true;
+                onBackPressed();
+            }
         }
     }
 }

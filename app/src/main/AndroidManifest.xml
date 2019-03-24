@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.VIBRATE"></uses-permission>
 
     <application
         android:allowBackup="true"
@@ -23,7 +24,8 @@
         <activity
             android:name=".MainActivity"
             android:label="Cube Control"></activity>
-        <activity android:name=".SnakeActivity"></activity>
+        <activity android:name=".SnakeActivity"  android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen" android:configChanges="orientation|screenSize">
+        </activity>
     </application>
 
 </manifest>
