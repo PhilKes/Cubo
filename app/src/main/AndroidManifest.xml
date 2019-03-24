@@ -23,7 +23,8 @@
         <activity
             android:name=".MainActivity"
             android:label="Cube Control"></activity>
-        <activity android:name=".SnakeActivity"></activity>
+        <activity android:name=".SnakeActivity"  android:theme="@style/Theme.AppCompat.NoActionBar" android:configChanges="orientation|screenSize">
+        </activity>
     </application>
 
 </manifest>

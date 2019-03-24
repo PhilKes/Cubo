@@ -248,7 +248,7 @@ public class MainActivity extends AppCompatActivity
      * @param anim Clicked Animation number
      *
      */
-    private void animClicked(int anim)
+    public void animClicked(int anim)
     {
         Log.d(TAG, "animClicked: "+anim);
         resetSpeed(null);
