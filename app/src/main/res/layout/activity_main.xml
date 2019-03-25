@@ -115,18 +115,16 @@
 
         <EditText
             android:id="@+id/text_command"
-            android:layout_width="111dp"
+            android:layout_width="110dp"
             android:layout_height="47dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="8dp"
-            android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
             android:hint="Command"
             android:inputType="text"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toEndOf="@+id/btn_text" />
 
         <Button
             android:id="@+id/btn_sendcommand"
@@ -183,13 +181,18 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/btn_sendcommand" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btn_snake"
             style="@style/ButtonBlue"
-            android:layout_width="86dp"
-            android:layout_height="37dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:layout_marginEnd="8dp"
+            android:background="@drawable/btn_anim_default"
+            android:elevation="0dp"
             android:onClick="testBTSend"
+            android:padding="4dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/snake_icon"
             android:text="Snake"
             app:layout_constraintBottom_toBottomOf="@+id/btn_sendcommand"
             app:layout_constraintEnd_toEndOf="parent"

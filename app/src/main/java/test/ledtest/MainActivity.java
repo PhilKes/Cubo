@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -59,6 +61,7 @@ public class MainActivity extends AppCompatActivity
                             BUTTON_SIZE=220;
     private static final int UNSELECTED_COLOR=Color.rgb(200,200,200),
                              SELECTED_COLOR=Color.RED;
+
     /**
      * Android
      */
@@ -89,6 +92,8 @@ public class MainActivity extends AppCompatActivity
             R.drawable.waterfall,
             R.drawable.waterfall,
             R.drawable.off};
+    private SoundPool soundPool;
+    private ArrayList<Integer> soundIDs;
     //{"off","all","red","blue","green","random","stripes","cube","font4"};
 
 
@@ -130,7 +135,6 @@ public class MainActivity extends AppCompatActivity
                     new Drawable[]{getResources().getDrawable(R.drawable.btn_anim_default)});
             layerDrawable.addLayer(getResources().getDrawable(animRes[i]));
             btn.setImageDrawable(layerDrawable);
-
             grid.addView(btn);
             animButtons.add(btn);
             GridLayout.LayoutParams params = (GridLayout.LayoutParams) btn.getLayoutParams();
@@ -146,7 +150,8 @@ public class MainActivity extends AppCompatActivity
         }
         //endregion
 
-        Button btnSnake=findViewById(R.id.btn_snake);
+        ImageButton btnSnake=findViewById(R.id.btn_snake);
+
         btnSnake.setOnClickListener(v->{
             Intent intent=new Intent(this,SnakeActivity.class);
             startActivity(intent);
@@ -198,7 +203,11 @@ public class MainActivity extends AppCompatActivity
             }
         });
         //endregion
+
+
     }
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.

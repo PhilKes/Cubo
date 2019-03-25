@@ -7,20 +7,33 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.AudioAttributes;
+import android.media.SoundPool;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.HapticFeedbackConstants;
+import android.view.View;
 import android.widget.ImageButton;
+
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static test.ledtest.MainActivity.DEBUG;
 
 public class SnakeActivity extends AppCompatActivity  implements SensorEventListener {
     private static final String TAG = "SNAKE";
+    private static final int SOUND_TURN=0;
+
     BluetoothSocket btSocket;
     char direction='u';
     private SensorManager sensorManager;
     private Sensor sensor;
     private int lastTilt=-1;
+    private View btn;
+    private SoundPool soundPool;
+    private ArrayList<Integer> soundIDs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +41,9 @@ public class SnakeActivity extends AppCompatActivity  implements SensorEventList
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         setContentView(R.layout.activity_snake);
         btSocket=MainActivity.btSocket;
+
         ImageButton btnUp=findViewById(R.id.btn_up);
+        btn=btnUp;
         ImageButton btnDown=findViewById(R.id.btn_down);
         ImageButton btnLeft=findViewById(R.id.btn_left);
         ImageButton btnRight=findViewById(R.id.btn_right);
@@ -41,13 +56,48 @@ public class SnakeActivity extends AppCompatActivity  implements SensorEventList
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
+        //region SOUNDS
+        /** Init SoundPool, Score Sounds **/
+        AudioAttributes audioAttributes=new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+        soundPool=new SoundPool.Builder()
+                .setMaxStreams(1)
+                .setAudioAttributes(audioAttributes)
+                .build();
+        getSoundIDs();
+        //endregion
+
     }
     private void sendAction(char action){
         if(!DEBUG)
             MainActivity.sendBT("SA"+action);
         else
             Log.d(TAG, "sendAction: "+action);
+
+        getWindow().getDecorView().performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY, HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING);
+       new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                  playSound(SOUND_TURN);
+            }
+        }, 300);
+
         lastTilt=-1;
+    }
+    private void getSoundIDs() {
+        soundIDs=new ArrayList<>();
+        soundIDs.add(getResources().getIdentifier("whoosh", "raw", getPackageName()));  // Turn Sound
+    }
+    private void playSound(int id) {
+        final int sound=soundPool.load(this,soundIDs.get(id),1);
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int i, int i1) {
+                soundPool.play(sound,1f,1f,1,0,1f);
+            }
+        });
     }
     @Override
     protected void onStart() {
