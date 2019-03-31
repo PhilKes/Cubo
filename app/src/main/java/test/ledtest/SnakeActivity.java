@@ -44,7 +44,7 @@ public class SnakeActivity extends AppCompatActivity  implements SensorEventList
     private ArrayList<Integer> soundIDs;
     private InputStream inputStream;
     private Thread workerThread;
-    public static boolean stopWorker;
+    public static boolean stopWorker=false;
     public static ReceiveThread thread;
     private TextView txtScore;
     private int score=0;
@@ -59,7 +59,7 @@ public class SnakeActivity extends AppCompatActivity  implements SensorEventList
             }
             else if(message.what==MESSAGE_DEAD){
                 Log.d(TAG, "DEAD");
-                playSound(SOUND_DEATH);
+
                 //Toast.makeText(SnakeActivity.this, "DEAD", Toast.LENGTH_LONG).show();
                 AlertDialog.Builder builder = new AlertDialog.Builder(SnakeActivity.this);
                 builder.setMessage("Score: "+score).setTitle("Dead")
@@ -79,6 +79,7 @@ public class SnakeActivity extends AppCompatActivity  implements SensorEventList
                             }
                         });
                 builder.create().show();
+                playSound(SOUND_DEATH);
             }
             return true;
         }
@@ -111,11 +112,11 @@ public class SnakeActivity extends AppCompatActivity  implements SensorEventList
         //region SOUNDS
         /** Init SoundPool, Score Sounds **/
         AudioAttributes audioAttributes=new AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                .setUsage(AudioAttributes.USAGE_GAME)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build();
         soundPool=new SoundPool.Builder()
-                .setMaxStreams(5)
+                .setMaxStreams(2)
                 .setAudioAttributes(audioAttributes)
                 .build();
         getSoundIDs();
@@ -197,10 +198,11 @@ public class SnakeActivity extends AppCompatActivity  implements SensorEventList
         if(id!=SOUND_TURN)
             prio=2;
         final int sound=soundPool.load(this,soundIDs.get(id),prio);
+        int finalPrio = prio;
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
             public void onLoadComplete(SoundPool soundPool, int i, int i1) {
-                soundPool.play(sound,1f,1f,1,0,1f);
+                soundPool.play(sound,1f,1f, finalPrio,0,1f);
             }
         });
     }
