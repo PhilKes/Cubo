@@ -18,7 +18,7 @@
                                 <PersistentState>
                                   <option name="values">
                                     <map>
-                                      <entry key="url" value="jar:file:/F:/Programme/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/hardware/ic_keyboard_arrow_right_black_24dp.xml" />
+                                      <entry key="url" value="jar:file:/F:/Programme/Android%20Studio/plugins/android/lib/android.jar!/images/material_design_icons/device/ic_bluetooth_black_24dp.xml" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -28,12 +28,8 @@
                         </option>
                         <option name="values">
                           <map>
-                            <entry key="color" value="ffffff" />
-                            <entry key="height" value="64" />
-                            <entry key="outputName" value="ic_right" />
-                            <entry key="overrideSize" value="true" />
+                            <entry key="outputName" value="ic_bluetooth" />
                             <entry key="sourceFile" value="C:\Users\Phil" />
-                            <entry key="width" value="64" />
                           </map>
                         </option>
                       </PersistentState>

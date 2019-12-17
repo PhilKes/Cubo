@@ -39,6 +39,8 @@ import philkes.cubo.util.Util;
 import static philkes.cubo.util.Constants.ARDUINO_DEFAULT_SPEED;
 import static philkes.cubo.util.Constants.BUTTON_SIZE;
 import static philkes.cubo.util.Constants.DEBUG;
+import static philkes.cubo.util.Constants.EXTRA_ADDRESS;
+import static philkes.cubo.util.Constants.EXTRA_NAME;
 import static philkes.cubo.util.Constants.MAX_BRIGHTNESS;
 import static philkes.cubo.util.Constants.MAX_SPEED;
 import static philkes.cubo.util.Util.pxToDP;
@@ -77,18 +79,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Util.CONTEXT=getApplicationContext();
         String address=null;
-        if(!DEBUG) {
-            Intent newint=getIntent();
-            address=newint.getStringExtra(DeviceList.EXTRA_ADDRESS); //receive the address of the bluetooth device
-        }
+        Intent newint=getIntent();
+        address=newint.getStringExtra(EXTRA_ADDRESS); //receive the address of the bluetooth device
+        setTitle(newint.getStringExtra(EXTRA_NAME));
         setContentView(R.layout.activity_main);
-        //call the widgtes
+        //call the widgets
         textCommand=findViewById(R.id.text_command);
         brightBar=findViewById(R.id.brightBar);
         speedBar=findViewById(R.id.speedBar);
         brightText=findViewById(R.id.brightText);
         speedText=findViewById(R.id.speedText);
 
+        btConnection=new BTConnection(this,address);
         if(!DEBUG) {
             new ConnectBT(this,btConnection).execute(); //Call the class to connect
         }
@@ -169,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         //endregion
-        btConnection=new BTConnection(this,address);
+
         instance=this;
     }
 

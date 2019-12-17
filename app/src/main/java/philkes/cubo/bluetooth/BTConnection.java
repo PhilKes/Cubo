@@ -98,7 +98,6 @@ public class BTConnection {
     public class BluetoothLostReceiver extends BroadcastReceiver {
 
         MainActivity main=null;
-
         public void setMainActivity(MainActivity main) {
             this.main=main;
         }
@@ -110,6 +109,7 @@ public class BTConnection {
                 if(SnakeActivity.thread!=null) {
                     SnakeActivity.stopWorker=true;
                 }
+                BTConnection.this.disconnect();
                 main.onBackPressed();
             }
         }

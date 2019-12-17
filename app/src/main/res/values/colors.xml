@@ -5,7 +5,7 @@
     <color name="colorPrimaryDark">#a15500</color>
     <color name="colorSecondary">#1994FF</color>
     <color name="colorSecondaryDark">#0F5694</color>
-    <color name="colorAccent">#ffbb00</color>
+    <color name="colorAccent">#FFBB00</color>
     <color name="foreground_material_light">#080808</color>
     <color name="colorBackground">#fff6e5</color>
     <color name="background_material_light">#ffffff</color>

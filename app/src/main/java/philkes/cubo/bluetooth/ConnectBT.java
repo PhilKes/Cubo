@@ -29,7 +29,7 @@ public class ConnectBT extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected void onPreExecute() {
-        progress=ProgressDialog.show(mainActivity, "Connecting...", "Please wait!!!");  //show a progress dialog
+        progress=ProgressDialog.show(mainActivity, "Connecting...", "Please wait!");  //show a progress dialog
     }
 
     //while the progress dialog is shown, the connection is done in background
